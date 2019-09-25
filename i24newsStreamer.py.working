@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+
+from requests_html import HTMLSession
+import random
+import json
+from pprint import pprint
+import time
+from urllib.parse import quote, unquote
+import re
+import brotli
+import click
+import sys
+import subprocess
+from myNetwork import MyNetwork
+from newsStreamer import NewsStreamer
+
+VERBOSE = 4
+INFO = 3
+DEBUG = 2
+ERROR = 1
+
+log_level = ERROR
+
+# whitespace at line break is relevant
+USER_AGENT = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) '
+              'Chrome/70.0.3538.102 Safari/537.36')
+MPV = 'mpv'  # if needed can be changed to an absolute path
+
+
+def error(msg, exit_code=None):
+    print(msg)
+    sys.stdout.flush()
+    if exit is not None:
+        sys.exit(exit_code)
+
+
+def info(msg, dot_if_suppressed=False):
+    if log_level >= INFO:
+        print(msg)
+        sys.stdout.flush()
+    elif dot_if_suppressed:
+        sys.stdout.write('.')
+        sys.stdout.flush()
+
+
+def verbose(msg):
+    if log_level >= VERBOSE:
+        print(msg)
+        sys.stdout.flush()
+
+
+@click.command()
+@click.option('-v', '--verbose', count=True)
+@click.option('--credentials', default="credentials.json", show_default=True, type=click.Path(exists=True))
+def main(verbose, credentials):
+    global log_level
+    if verbose == 1:
+        log_level = INFO
+    elif verbose > 1:
+        log_level = VERBOSE
+
+    requests_session = HTMLSession()
+    streamer = NewsStreamer(requests_session, credentials)
+    streamer.auth()
+    streamer.show_menu()
+
+
+if __name__ == '__main__':
+    main()
